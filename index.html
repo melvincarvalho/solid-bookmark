@@ -91,11 +91,11 @@
         <button id="close" class="delete" aria-label="close"></button>
       </header>
       <section class="modal-card-body">
-        Form goes here ...
+        Create a bookmark
         <form>
           <input id="title" type="text" placeholder="Title">
           <br>
-          <input id="url" type="text" placeholder="Uri">
+          <input id="uri" type="text" placeholder="Uri">
         </form>
       </section>
       <footer class="modal-card-foot">
@@ -158,7 +158,7 @@
       bookmarks.innerHTML = ''
       for (var i = 0; i < template.bookmarks.length; i++) {
         let bookmark = template.bookmarks[i]
-        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.description + "</strong>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.title + "</strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.recall + "'>" + bookmark.recall + "</a>")
@@ -182,6 +182,7 @@
       let logout = document.getElementById("logout");
       let close = document.getElementById("close");
       let cancel = document.getElementById("cancel");
+      let save = document.getElementById("save");
       // login and logout buttons
       const popupUri = "https://melvincarvalho.github.io/helloworld/popup.html";
       login.addEventListener("click", () => solid.auth.popupLogin({
@@ -199,6 +200,31 @@
       cancel.addEventListener("click", () => {
         document.getElementById('modal').classList.remove('is-active')
       })
+      save.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+        let id = "#" + Math.random()
+        let uri = document.getElementById('uri').textContent
+        let title = document.getElementById('title').textContent
+        let source = template.bookmarkInstance
+        const query = `
+          INSERT DATA {
+            [$id] a a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
+            <http://purl.org/dc/terms/title>   """$title""" ;
+            <https://www.w3.org/2002/01/bookmark#recall> <$uri> .
+          }`
+        // Send a PATCH request to update the source
+        console.log("query", query)
+        solid.auth.fetch(source, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/sparql-update' },
+          body: query,
+          credentials: 'include',
+        });
+
+
+      })
+
+
 
     }
     // HELPERS
@@ -263,6 +289,7 @@
       if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
         const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
         fetchBookmarks(bookmarkInstance)
+        template.bookmarkInstance = bookmarkInstance
       }
     }
     async function fetchBookmarks(bookmarkInstance) {
@@ -282,11 +309,11 @@
         template.bookmarks = []
         for (var i = 0; i < bookmarks.length; i++) {
           let bookmark = bookmarks[i]
-          let description = store.any(bookmark.subject, DC('description'))
+          let title = store.any(bookmark.subject, DC('title'))
           let recall = store.any(bookmark.subject, BOOKMARK('recall'))
           template.bookmarks.push({
             "recall": recall.value,
-            "description": description.value
+            "title": title.value
           })
           console.log("bookmark " + i, bookmark)
         }

@@ -88,7 +88,7 @@
       </section>
     </div>
   </section>
-  
+
   <script src="https://melvincarvalho.github.io/helloworld/scripts/jquery.js"></script>
   <script src="https://melvincarvalho.github.io/helloworld/scripts/solid-auth-client.bundle.js"></script>
   <script src="https://melvincarvalho.github.io/helloworld/scripts/rdflib.min.js"></script>
@@ -96,9 +96,21 @@
     // INIT
     var template = {}
     template.bookmarks = []
+
+    function init () {
+      addListeners();
+      hamburgerHelper();
+      var webId = getQueryStringParam('webid')
+      if (webId) {        
+        template.webId = webId
+        renderLogin(webId)
+      }
+      console.log('webid', template.webId)      
+    }
     
     // RENDER FUNCTIONS
     function renderLogin(webId) {
+      if (template.webId) webId = template.webId
       console.log('logged in as', webId)
       let logout = document.getElementById("logout");
       let login = document.getElementById("login");
@@ -127,28 +139,26 @@
 
     function renderBookmarks() {
       let bookmarks = document.getElementById("bookmarks");
-      for (var i=0; i<template.bookmarks.length; i++) {
+      for (var i = 0; i < template.bookmarks.length; i++) {
         let bookmark = template.bookmarks[i]
-        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.description + "</strong>")        
-        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")        
+        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.description + "</strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.recall + "'>" + bookmark.recall + "</a>")        
-        bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")        
+        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.recall + "'>" + bookmark.recall + "</a>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
-
     // HANDLERS
     function handleLogin() {
       // login event
       solid.auth.trackSession(session => {
-        if (session && session.webId) {
+        if (session && session.webId || template && template.webId) {
           renderLogin(session.webId);
         } else {
           renderLogout();
         }
       });
     }
-    
     // Log the user in and out on click
     function addListeners() {
       let login = document.getElementById("login");
@@ -161,7 +171,6 @@
       logout.addEventListener("click", () => solid.auth.logout());
       handleLogin();
     }
-
     // HELPERS
     function hamburgerHelper() {
       document.querySelector(".navbar-burger").addEventListener("click", toggleNav);
@@ -175,13 +184,23 @@
         }
       }
     }
-    
+
+    function getQueryStringParam(param) {
+      var url = window.location.toString();
+      url.match(/\?(.+)$/);
+      var params = RegExp.$1;
+      params = params.split("&");
+      var queryStringList = {};
+      for (var i = 0; i < params.length; i++) {
+        var tmp = params[i].split("=");
+        queryStringList[tmp[0]] = unescape(tmp[1]);
+      }
+      return queryStringList[param];
+    }
     // FETCH
     async function fetchProfile(webId) {
-      const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/'); 
-      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#'); 
-      
-
+      const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store);
       // Load the person's data into the store
@@ -190,85 +209,64 @@
       const name = store.any($rdf.sym(webId), FOAF('name'));
       const img = store.any($rdf.sym(webId), FOAF('img'));
       const publicTypeIndex = store.any($rdf.sym(webId), SOLID('publicTypeIndex'), null, $rdf.sym(webId.split('#')[0]));
-
       //console.log("publicTypeIndex", publicTypeIndex)
-      
       if (name && name.value) {
-        document.getElementById("name").textContent = name.value;   
+        document.getElementById("name").textContent = name.value;
       }
-
       if (img && img.value) {
-        document.getElementById("img").setAttribute("src", img.value);   
+        document.getElementById("img").setAttribute("src", img.value);
       }
-      
       if (publicTypeIndex && publicTypeIndex.value) {
         fetchPublicTypeIndex(publicTypeIndex)
       }
-      
     }
-
     async function fetchPublicTypeIndex(publicTypeIndex) {
-      
-      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#'); 
-      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');       
-
+      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store);
       // Load the person's data into the store
       await fetcher.load(publicTypeIndex);
       // Display their details
       const bookmarkTypeRegistration = store.any(null, SOLID("forClass"), BOOKMARK("Bookmark"))
-     
       console.log("bookmarkTypeRegistration", bookmarkTypeRegistration)
-      
       if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
         const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
         fetchBookmarks(bookmarkInstance)
       }
-      
     }
-
     async function fetchBookmarks(bookmarkInstance) {
-      
-      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#'); 
-      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');   
+      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
       const DC = $rdf.Namespace('http://purl.org/dc/terms/')
-      
-
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store)
       // Load the person's data into the store
-
       console.log("bookmarkInstance", bookmarkInstance)
-      
       await fetcher.load(bookmarkInstance);
       // Display their details
-
-      
       const bookmarks = store.statementsMatching(null, RDF("type"), BOOKMARK("Bookmark"));
-      
       console.log("Bookmarks", bookmarks);
-      
       if (bookmarks && bookmarks.length) {
-        for (var i=0; i<bookmarks.length; i++) {
+        for (var i = 0; i < bookmarks.length; i++) {
           let bookmark = bookmarks[i]
-          let description = store.any(bookmark.subject, DC('description') )
+          let description = store.any(bookmark.subject, DC('description'))
           let recall = store.any(bookmark.subject, BOOKMARK('recall'))
-          template.bookmarks.push( { "recall" : recall.value, "description" : description.value } )
+          template.bookmarks.push({
+            "recall": recall.value,
+            "description": description.value
+          })
           console.log("bookmark " + i, bookmark)
         }
         console.log("template.bookmarks", template.bookmarks)
         renderBookmarks()
       }
       console.log()
-      
     }
-
-    
     // MAIN
-    addListeners();
-    hamburgerHelper();
+    init()
+    
   </script>
 
 </body>

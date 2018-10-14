@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solid Bookmarks</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
+</head>
+
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://solid.mit.edu/">
+      Solid
+    </a>
+
+      <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+    </div>
+
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item">
+        Home
+      </a>
+
+        <a class="navbar-item">
+        Documentation
+      </a>
+
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+          More
+        </a>
+
+          <div class="navbar-dropdown">
+            <a class="navbar-item">
+            About
+          </a>
+            <a class="navbar-item">
+            Contact
+          </a>
+            <hr class="navbar-divider">
+            <a class="navbar-item">
+            <a target="_blank" href="https://github.com/melvincarvalho/solid-profile/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">Report an issue</a>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item">
+
+          <div class="buttons">
+            <a id="register" href="https://solid.inrupt.com/get-a-solid-pod" target="_blank" class="button is-primary">
+                     <strong>Sign up</strong>
+                     </a>
+            <a id="login" class="button is-light">
+                     Login
+                     </a>
+            <a id="logout" class="button is-light" style="display:none">
+                     Logout
+                     </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Solid Bookmarks
+      </h1>
+      <section id="app" style="display:none">
+        <hr>
+        <a id="user" target="_blank" href="#"></a>
+        <hr>
+        <div id="name"></div>
+        <hr>
+        <div id="bookmarks"></div>
+      </section>
+    </div>
+  </section>
+  
+  <script src="https://melvincarvalho.github.io/helloworld/scripts/jquery.js"></script>
+  <script src="https://melvincarvalho.github.io/helloworld/scripts/solid-auth-client.bundle.js"></script>
+  <script src="https://melvincarvalho.github.io/helloworld/scripts/rdflib.min.js"></script>
+  <script>
+    // INIT
+    var template = {}
+    template.bookmarks = []
+    
+    // RENDER FUNCTIONS
+    function renderLogin(webId) {
+      console.log('logged in as', webId)
+      let logout = document.getElementById("logout");
+      let login = document.getElementById("login");
+      let register = document.getElementById("register");
+      let app = document.getElementById("app");
+      logout.style = '';
+      register.style.display = "none";
+      login.style.display = "none";
+      app.style.display = "";
+      user.style.display = "";
+      user.textContent = webId;
+      user.setAttribute("href", webId);
+      fetchProfile(webId);
+    }
+
+    function renderLogout() {
+      let logout = document.getElementById("logout");
+      let login = document.getElementById("login");
+      let register = document.getElementById("register");
+      let app = document.getElementById("app");
+      logout.style.display = "none";
+      app.style.display = "none";
+      login.style.display = "";
+      register.style.display = "";
+    }
+
+    function renderBookmarks() {
+      let bookmarks = document.getElementById("bookmarks");
+      for (var i=0; i<template.bookmarks.length; i++) {
+        let bookmark = template.bookmarks[i]
+        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.description + "</strong>")        
+        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")        
+        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.recall + "'>" + bookmark.recall + "</a>")        
+        bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")        
+      }
+    }
+
+    // HANDLERS
+    function handleLogin() {
+      // login event
+      solid.auth.trackSession(session => {
+        if (session && session.webId) {
+          renderLogin(session.webId);
+        } else {
+          renderLogout();
+        }
+      });
+    }
+    
+    // Log the user in and out on click
+    function addListeners() {
+      let login = document.getElementById("login");
+      let logout = document.getElementById("logout");
+      // login and logout buttons
+      const popupUri = "https://melvincarvalho.github.io/helloworld/popup.html";
+      login.addEventListener("click", () => solid.auth.popupLogin({
+        popupUri
+      }));
+      logout.addEventListener("click", () => solid.auth.logout());
+      handleLogin();
+    }
+
+    // HELPERS
+    function hamburgerHelper() {
+      document.querySelector(".navbar-burger").addEventListener("click", toggleNav);
+
+      function toggleNav() {
+        var nav = document.querySelector(".navbar-menu");
+        if (nav.className == "navbar-menu") {
+          nav.className = "navbar-menu is-active";
+        } else {
+          nav.className = "navbar-menu";
+        }
+      }
+    }
+    
+    // FETCH
+    async function fetchProfile(webId) {
+      const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/'); 
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#'); 
+      
+
+      const store = $rdf.graph();
+      const fetcher = new $rdf.Fetcher(store);
+      // Load the person's data into the store
+      await fetcher.load(webId);
+      // Display their details
+      const name = store.any($rdf.sym(webId), FOAF('name'));
+      const img = store.any($rdf.sym(webId), FOAF('img'));
+      const publicTypeIndex = store.any($rdf.sym(webId), SOLID('publicTypeIndex'), null, $rdf.sym(webId.split('#')[0]));
+
+      //console.log("publicTypeIndex", publicTypeIndex)
+      
+      if (name && name.value) {
+        document.getElementById("name").textContent = name.value;   
+      }
+
+      if (img && img.value) {
+        document.getElementById("img").setAttribute("src", img.value);   
+      }
+      
+      if (publicTypeIndex && publicTypeIndex.value) {
+        fetchPublicTypeIndex(publicTypeIndex)
+      }
+      
+    }
+
+    async function fetchPublicTypeIndex(publicTypeIndex) {
+      
+      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#'); 
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');       
+
+      const store = $rdf.graph();
+      const fetcher = new $rdf.Fetcher(store);
+      // Load the person's data into the store
+      await fetcher.load(publicTypeIndex);
+      // Display their details
+      const bookmarkTypeRegistration = store.any(null, SOLID("forClass"), BOOKMARK("Bookmark"))
+     
+      console.log("bookmarkTypeRegistration", bookmarkTypeRegistration)
+      
+      if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
+        const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
+        fetchBookmarks(bookmarkInstance)
+      }
+      
+    }
+
+    async function fetchBookmarks(bookmarkInstance) {
+      
+      const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#'); 
+      const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');   
+      const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
+      const DC = $rdf.Namespace('http://purl.org/dc/terms/')
+      
+
+      const store = $rdf.graph();
+      const fetcher = new $rdf.Fetcher(store)
+      // Load the person's data into the store
+
+      console.log("bookmarkInstance", bookmarkInstance)
+      
+      await fetcher.load(bookmarkInstance);
+      // Display their details
+
+      
+      const bookmarks = store.statementsMatching(null, RDF("type"), BOOKMARK("Bookmark"));
+      
+      console.log("Bookmarks", bookmarks);
+      
+      if (bookmarks && bookmarks.length) {
+        for (var i=0; i<bookmarks.length; i++) {
+          let bookmark = bookmarks[i]
+          let description = store.any(bookmark.subject, DC('description') )
+          let recall = store.any(bookmark.subject, BOOKMARK('recall'))
+          template.bookmarks.push( { "recall" : recall.value, "description" : description.value } )
+          console.log("bookmark " + i, bookmark)
+        }
+        console.log("template.bookmarks", template.bookmarks)
+        renderBookmarks()
+      }
+      console.log()
+      
+    }
+
+    
+    // MAIN
+    addListeners();
+    hamburgerHelper();
+  </script>
+
+</body>
+
+</html>

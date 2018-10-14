@@ -12,8 +12,8 @@
 
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-      <a class="navbar-item" href="https://solid.mit.edu/">
-      Solid
+      <a id="add" class="navbar-item" href="#">
+      + Create Bookmark
     </a>
 
       <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
@@ -25,14 +25,10 @@
 
     <div id="navbarBasicExample" class="navbar-menu">
       <div class="navbar-start">
-        <a id="add" class="navbar-item">
-        Add Bookmark
-      </a>
-
 
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link">
-          More
+          About
         </a>
 
           <div class="navbar-dropdown">
@@ -86,6 +82,23 @@
       </section>
     </div>
   </section>
+
+  <div id="modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Create Bookmark</p>
+        <button id="close" class="delete" aria-label="close"></button>
+      </header>
+      <section class="modal-card-body">
+        Form goes here ...
+      </section>
+      <footer class="modal-card-foot">
+        <button class="button is-success">Save changes</button>
+        <button id="cancel" class="button">Cancel</button>
+      </footer>
+    </div>
+  </div>
 
   <script src="https://melvincarvalho.github.io/helloworld/scripts/jquery.js"></script>
   <script src="https://melvincarvalho.github.io/helloworld/scripts/solid-auth-client.bundle.js"></script>
@@ -162,6 +175,8 @@
     function addListeners() {
       let login = document.getElementById("login");
       let logout = document.getElementById("logout");
+      let close = document.getElementById("close");
+      let cancel = document.getElementById("cancel");
       // login and logout buttons
       const popupUri = "https://melvincarvalho.github.io/helloworld/popup.html";
       login.addEventListener("click", () => solid.auth.popupLogin({
@@ -169,6 +184,17 @@
       }));
       logout.addEventListener("click", () => solid.auth.logout());
       handleLogin();
+
+      add.addEventListener("click", () => {
+        document.getElementById('modal').classList.add('is-active')
+      })
+      close.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+      })
+      cancel.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+      })
+
     }
     // HELPERS
     function hamburgerHelper() {

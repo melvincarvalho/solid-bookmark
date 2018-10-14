@@ -25,13 +25,10 @@
 
     <div id="navbarBasicExample" class="navbar-menu">
       <div class="navbar-start">
-        <a class="navbar-item">
-        Home
+        <a id="add" class="navbar-item">
+        Add Bookmark
       </a>
 
-        <a class="navbar-item">
-        Documentation
-      </a>
 
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link">
@@ -39,13 +36,7 @@
         </a>
 
           <div class="navbar-dropdown">
-            <a class="navbar-item">
-            About
-          </a>
-            <a class="navbar-item">
-            Contact
-          </a>
-            <hr class="navbar-divider">
+
             <a class="navbar-item">
             <a target="_blank" href="https://github.com/melvincarvalho/solid-bookmark/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">Report an issue</a>
             </a>
@@ -82,9 +73,16 @@
         <hr>
         <a id="user" target="_blank" href="#"></a>
         <hr>
+        <section id="showbookmarks">
         <div id="name"></div>
         <hr>
         <div id="bookmarks"></div>
+        </section>
+        <section id="addbookmarks" style="display:none">
+          add bookmark
+          <form>
+          </form>
+        </section>
       </section>
     </div>
   </section>
@@ -101,13 +99,13 @@
       addListeners();
       hamburgerHelper();
       var webId = getQueryStringParam('webid')
-      if (webId) {        
+      if (webId) {
         template.webId = webId
         renderLogin(webId)
       }
-      console.log('webid', template.webId)      
+      console.log('webid', template.webId)
     }
-    
+
     // RENDER FUNCTIONS
     function renderLogin(webId) {
       if (template.webId) webId = template.webId
@@ -139,6 +137,7 @@
 
     function renderBookmarks() {
       let bookmarks = document.getElementById("bookmarks");
+      bookmarks.innerHTML = ''
       for (var i = 0; i < template.bookmarks.length; i++) {
         let bookmark = template.bookmarks[i]
         bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.description + "</strong>")
@@ -249,6 +248,7 @@
       const bookmarks = store.statementsMatching(null, RDF("type"), BOOKMARK("Bookmark"));
       console.log("Bookmarks", bookmarks);
       if (bookmarks && bookmarks.length) {
+        template.bookmarks = []
         for (var i = 0; i < bookmarks.length; i++) {
           let bookmark = bookmarks[i]
           let description = store.any(bookmark.subject, DC('description'))
@@ -266,7 +266,7 @@
     }
     // MAIN
     init()
-    
+
   </script>
 
 </body>

@@ -206,11 +206,10 @@
         let uri = document.getElementById('uri').textContent
         let title = document.getElementById('title').textContent
         let source = template.bookmarkInstance
-        const query = `
-          INSERT DATA {
-            [$id] a a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
-            <http://purl.org/dc/terms/title>   """$title""" ;
-            <https://www.w3.org/2002/01/bookmark#recall> <$uri> .
+        const query = ` INSERT DATA {
+            <${id}> a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
+            <http://purl.org/dc/terms/title>   """${title}""" ;
+            <https://www.w3.org/2002/01/bookmark#recall> <${uri}> .
           }`
         // Send a PATCH request to update the source
         console.log("query", query)
@@ -289,7 +288,7 @@
       if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
         const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
         fetchBookmarks(bookmarkInstance)
-        template.bookmarkInstance = bookmarkInstance
+        template.bookmarkInstance = bookmarkInstance.value
       }
     }
     async function fetchBookmarks(bookmarkInstance) {

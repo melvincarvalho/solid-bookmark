@@ -147,7 +147,7 @@
     function init () {
       addListeners();
       hamburgerHelper();
-      var webId = getQueryStringParam('webid')
+      var webId = getQueryStringParam('subject')
       if (webId) {
         template.webId = webId
         renderLogin(webId)

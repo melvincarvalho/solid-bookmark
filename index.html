@@ -189,10 +189,10 @@
       bookmarks.innerHTML = ''
       for (var i = 0; i < template.bookmarks.length; i++) {
         let bookmark = template.bookmarks[i]
-        bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmarks.recall +"'>" + bookmark.title + "</a></strong>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', bookmarks.created)
+        bookmarks.insertAdjacentHTML('beforeEnd', "<time datetime='bookmark.created'></time>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }

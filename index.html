@@ -192,7 +192,7 @@
         bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<time datetime='" + bookmark.created.value + "'></time>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<time datetime='" + bookmark.created + "'></time>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
@@ -346,7 +346,7 @@
           let recall = store.any(bookmark.subject, BOOKMARK('recall'))
           template.bookmarks.push({
             "recall": recall.value,
-            "created": recall.created,
+            "created": recall.created.value,
             "title": title.value
           })
           console.log("bookmark " + i, bookmark)

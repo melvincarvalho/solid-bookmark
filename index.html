@@ -341,9 +341,10 @@
         template.bookmarks = []
         for (var i = 0; i < bookmarks.length; i++) {
           let bookmark = bookmarks[i]
-          let title = store.any(bookmark.subject, DC('title'))
-          let created = store.any(bookmark.subject, DC('created'))
-          let recall = store.any(bookmark.subject, BOOKMARK('recall'))
+          let subject = bookmark.subject
+          let title = store.any(subject, DC('title'))
+          let created = store.any(subject, DC('created'))
+          let recall = store.any(subject, BOOKMARK('recall'))
           template.bookmarks.push({
             "subject": subject.value,
             "recall": recall.value,

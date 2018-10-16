@@ -189,10 +189,10 @@
       bookmarks.innerHTML = ''
       for (var i = 0; i < template.bookmarks.length; i++) {
         let bookmark = template.bookmarks[i]
-        bookmarks.insertAdjacentHTML('beforeEnd', "<strong>" + bookmark.title + "</strong>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a href='"+ bookmarks.recall +"'>" + bookmark.title + "</a></strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.recall + "'>" + bookmark.recall + "</a>")
+        bookmarks.insertAdjacentHTML('beforeEnd', bookmarks.created)
         bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
@@ -342,9 +342,11 @@
         for (var i = 0; i < bookmarks.length; i++) {
           let bookmark = bookmarks[i]
           let title = store.any(bookmark.subject, DC('title'))
+          let created = store.any(bookmark.subject, DC('created'))
           let recall = store.any(bookmark.subject, BOOKMARK('recall'))
           template.bookmarks.push({
             "recall": recall.value,
+            "created": recall.created,
             "title": title.value
           })
           console.log("bookmark " + i, bookmark)

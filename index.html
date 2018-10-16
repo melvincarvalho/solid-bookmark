@@ -346,7 +346,7 @@
           let recall = store.any(bookmark.subject, BOOKMARK('recall'))
           template.bookmarks.push({
             "recall": recall.value,
-            "created": recall.created.value,
+            "created": created.value,
             "title": title.value
           })
           console.log("bookmark " + i, bookmark)

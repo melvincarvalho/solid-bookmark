@@ -148,26 +148,31 @@
       var webId = getQueryStringParam('subject')
       if (webId) {
         template.webId = webId
-        renderLogin(webId)
+        fetchProfile(webId)
       }
-      console.log('webid', template.webId)
+      console.log('init', 'webid', template.webId)
     }
 
     // RENDER FUNCTIONS
+    function render() {
+      renderProfile()
+      renderBookmarks()
+      if (template.loggedIn) {
+        renderLogin()
+      } else {
+        renderLogout()
+      }
+    }
+
     function renderLogin(webId) {
       if (template.webId) webId = template.webId
       console.log('logged in as', webId)
       let logout = document.getElementById("logout");
       let login = document.getElementById("login");
       let register = document.getElementById("register")
-      let app = document.getElementById("app");
       logout.style = '';
       register.style.display = "none";
       login.style.display = "none"
-      app.style.display = "";
-      user.style.display = "";
-      user.textContent = "Profile";
-      user.setAttribute("href", webId);
       fetchProfile(webId);
     }
 
@@ -175,19 +180,24 @@
       let logout = document.getElementById("logout");
       let login = document.getElementById("login");
       let register = document.getElementById("register");
-      let app = document.getElementById("app");
+      if (!template.webId) {
+        let app = document.getElementById("app");
+        app.style.display = "none";
+      }
       logout.style.display = "none";
-      app.style.display = "none";
       login.style.display = "";
       register.style.display = "";
     }
 
-    function render() {
-      renderProfile()
-      renderBookmarks()
-    }
-
     function renderProfile() {
+      console.log('rendering profile', template)
+      let user = document.getElementById("user");
+      let app = document.getElementById("app");
+      app.style.display = "";
+      user.style.display = "";
+      user.textContent = "Profile";
+      user.setAttribute("href", template.webId);
+
       if (template.name) {
         document.getElementById("name").textContent = template.name;
       }
@@ -197,6 +207,8 @@
     }
 
     function renderBookmarks() {
+      console.log('rendering bookmarks', template)
+
       let bookmarks = template.bookmarks.sort(function(a, b) {
         createda = a.created;
         createdb = b.created;
@@ -204,6 +216,9 @@
         b = new Date(createdb);
         return a>b ? -1 : a<b ? 1 : 0;
       })
+      document.getElementById("app").display = ''
+      document.getElementById("bookmarks").display = ''
+      document.getElementById("bookmarks").innerHTML = ''
       for (var i = 0; i < bookmarks.length; i++) {
         let bookmark = bookmarks[i]
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
@@ -217,11 +232,11 @@
     function handleLogin() {
       // login event
       solid.auth.trackSession(session => {
-        if (session && session.webId || template && template.webId) {
-          renderLogin(session.webId)
-          renderProfile()
+        let webId =  template && template.webId || session && session.webId
+        if (webId) {
+          render(webId)
         } else {
-          renderLogout();
+          render();
         }
       });
     }
@@ -259,6 +274,7 @@
         const query = ` INSERT DATA {
             <${id}> a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
             <http://purl.org/dc/terms/title>   """${title}""" ;
+            <http://xmlns.com/foaf/0.1/title>   <${template.webId}> ;
             <http://purl.org/dc/terms/created>  "${date}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
             <https://www.w3.org/2002/01/bookmark#recall> <${uri}> .
           }`
@@ -273,8 +289,6 @@
 
 
       })
-
-
 
     }
     // HELPERS
@@ -325,7 +339,7 @@
       if (publicTypeIndex && publicTypeIndex.value) {
         fetchPublicTypeIndex(publicTypeIndex)
       }
-      renderProfile()
+      render()
     }
     async function fetchPublicTypeIndex(publicTypeIndex) {
       const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');
@@ -339,8 +353,8 @@
       console.log("bookmarkTypeRegistration", bookmarkTypeRegistration)
       if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
         const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
-        fetchBookmarks(bookmarkInstance)
         template.bookmarkInstance = bookmarkInstance.value
+        fetchBookmarks(bookmarkInstance)
       }
     }
     async function fetchBookmarks(bookmarkInstance) {
@@ -364,16 +378,18 @@
           let title = store.any(subject, DC('title'))
           let created = store.any(subject, DC('created'))
           let recall = store.any(subject, BOOKMARK('recall'))
-          template.bookmarks.push({
-            "subject": subject.value,
-            "recall": recall.value,
-            "created": created.value,
-            "title": title.value
-          })
+          if (subject && recall && created && title) {
+            template.bookmarks.push({
+              "subject": subject.value,
+              "recall": recall.value,
+              "created": created.value,
+              "title": title.value
+            })
+          }
           console.log("bookmark " + i, bookmark)
         }
         console.log("template.bookmarks", template.bookmarks)
-        renderBookmarks()
+        render()
       }
       console.log()
     }

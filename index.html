@@ -141,68 +141,81 @@
     // INIT
     var template = {}
     template.bookmarks = []
+    template.profile = {} // profile to display
+
+    var state = {}
+    state.loggedIn = null
+    state.user = {} // logged in user
+    state.query = {} // query string user
+
 
     function init () {
       addListeners();
       hamburgerHelper();
-      var webId = getQueryStringParam('subject')
+      processQueryString()
+    }
+
+    function processQueryString() {
+      var webId = getQueryStringParam('webid')
       if (webId) {
-        template.webId = webId
-        fetchProfile(webId)
+        state.query.webId = webId
+        console.log('init', 'webid', state.query.webId)
+        fetchProfile()
       }
-      console.log('init', 'webid', template.webId)
     }
 
     // RENDER FUNCTIONS
     function render() {
+      renderLogin()
+      renderApp()
       renderProfile()
       renderBookmarks()
-      if (template.loggedIn) {
-        renderLogin()
-      } else {
-        renderLogout()
-      }
     }
 
-    function renderLogin(webId) {
-      if (template.webId) webId = template.webId
-      console.log('logged in as', webId)
+    function renderLogin() {
+
       let logout = document.getElementById("logout");
       let login = document.getElementById("login");
       let register = document.getElementById("register")
-      logout.style = '';
-      register.style.display = "none";
-      login.style.display = "none"
-      fetchProfile(webId);
+      let app = document.getElementById("app");
+
+      if (state.loggedIn) {
+        logout.style = ""
+        register.style.display = "none"
+        login.style.display = "none"
+      } else {
+        logout.style.display = "none"
+        login.style.display = ""
+        register.style.display = ""
+      }
     }
 
-    function renderLogout() {
-      let logout = document.getElementById("logout");
-      let login = document.getElementById("login");
-      let register = document.getElementById("register");
-      if (!template.webId) {
-        let app = document.getElementById("app");
-        app.style.display = "none";
+    function renderApp() {
+
+      let app = document.getElementById("app");
+
+      if (state.loggedIn || state.query.webId) {
+        app.style.display = ""
+      } else {
+        app.style.display = "none"
       }
-      logout.style.display = "none";
-      login.style.display = "";
-      register.style.display = "";
     }
 
     function renderProfile() {
       console.log('rendering profile', template)
       let user = document.getElementById("user");
-      let app = document.getElementById("app");
-      app.style.display = "";
-      user.style.display = "";
-      user.textContent = "Profile";
-      user.setAttribute("href", template.webId);
 
-      if (template.name) {
-        document.getElementById("name").textContent = template.name;
+      if (state.loggedIn || state.query.webId) {
+        user.setAttribute("href", template.profile.webId);
+        user.style.display = "";
+        user.textContent = "Profile";
       }
-      if (template.img) {
-        document.getElementById("img").setAttribute("src", template.img);
+
+      if (template.profile.name) {
+        document.getElementById("name").textContent = template.profile.name;
+      }
+      if (template.profile.img) {
+        document.getElementById("img").setAttribute("src", template.profile.img);
       }
     }
 
@@ -216,7 +229,6 @@
         b = new Date(createdb);
         return a>b ? -1 : a<b ? 1 : 0;
       })
-      document.getElementById("app").display = ''
       document.getElementById("bookmarks").display = ''
       document.getElementById("bookmarks").innerHTML = ''
       for (var i = 0; i < bookmarks.length; i++) {
@@ -228,136 +240,52 @@
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
-    // HANDLERS
-    function handleLogin() {
-      // login event
-      solid.auth.trackSession(session => {
-        let webId =  template && template.webId || session && session.webId
-        if (webId) {
-          render(webId)
-        } else {
-          render();
-        }
-      });
-    }
-    // Log the user in and out on click
-    function addListeners() {
-      let login = document.getElementById("login");
-      let logout = document.getElementById("logout");
-      let close = document.getElementById("close");
-      let cancel = document.getElementById("cancel");
-      let save = document.getElementById("save");
-      // login and logout buttons
-      const popupUri = "https://melvincarvalho.github.io/helloworld/popup.html";
-      login.addEventListener("click", () => solid.auth.popupLogin({
-        popupUri
-      }));
-      logout.addEventListener("click", () => solid.auth.logout());
-      handleLogin();
 
-      add.addEventListener("click", () => {
-        document.getElementById('modal').classList.add('is-active')
-      })
-      close.addEventListener("click", () => {
-        document.getElementById('modal').classList.remove('is-active')
-      })
-      cancel.addEventListener("click", () => {
-        document.getElementById('modal').classList.remove('is-active')
-      })
-      save.addEventListener("click", () => {
-        document.getElementById('modal').classList.remove('is-active')
-        let id = "#" + Math.random()
-        let uri = document.getElementById('uri').value
-        let title = document.getElementById('title').value
-        let source = template.bookmarkInstance
-        let date = new Date().toISOString();
-        const query = ` INSERT DATA {
-            <${id}> a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
-            <http://purl.org/dc/terms/title>   """${title}""" ;
-            <http://xmlns.com/foaf/0.1/title>   <${template.webId}> ;
-            <http://purl.org/dc/terms/created>  "${date}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
-            <https://www.w3.org/2002/01/bookmark#recall> <${uri}> .
-          }`
-        // Send a PATCH request to update the source
-        console.log("query", query)
-        solid.auth.fetch(source, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/sparql-update' },
-          body: query,
-          credentials: 'include',
-        });
-
-
-      })
-
-    }
-    // HELPERS
-    function hamburgerHelper() {
-      document.querySelector(".navbar-burger").addEventListener("click", toggleNav);
-
-      function toggleNav() {
-        var nav = document.querySelector(".navbar-menu");
-        if (nav.className == "navbar-menu") {
-          nav.className = "navbar-menu is-active";
-        } else {
-          nav.className = "navbar-menu";
-        }
-      }
-    }
-
-    function getQueryStringParam(param) {
-      var url = window.location.toString();
-      url.match(/\?(.+)$/);
-      var params = RegExp.$1;
-      params = params.split("&");
-      var queryStringList = {};
-      for (var i = 0; i < params.length; i++) {
-        var tmp = params[i].split("=");
-        queryStringList[tmp[0]] = unescape(tmp[1]);
-      }
-      return queryStringList[param];
-    }
     // FETCH
-    async function fetchProfile(webId) {
+    async function fetchProfile() {
+      template.profile.webId = state.query.webId || state.user.webId
       const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/');
       const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store);
       // Load the person's data into the store
-      await fetcher.load(webId);
+      await fetcher.load(template.profile.webId);
       // Display their details
-      const name = store.any($rdf.sym(webId), FOAF('name'));
-      const img = store.any($rdf.sym(webId), FOAF('img'));
-      const publicTypeIndex = store.any($rdf.sym(webId), SOLID('publicTypeIndex'), null, $rdf.sym(webId.split('#')[0]));
+      const name = store.any($rdf.sym(template.profile.webId), FOAF('name'));
+      const img = store.any($rdf.sym(template.profile.webId), FOAF('img'));
+      template.profile.publicTypeIndex = store.any($rdf.sym(template.profile.webId), SOLID('publicTypeIndex'), null, $rdf.sym(template.profile.webId.split('#')[0]));
       //console.log("publicTypeIndex", publicTypeIndex)
       if (name && name.value) {
-        template.name = name.value
+        template.profile.name = name.value
       }
       if (img && img.value) {
-        template.img = img.value
+        template.profile.img = img.value
       }
-      if (publicTypeIndex && publicTypeIndex.value) {
-        fetchPublicTypeIndex(publicTypeIndex)
+      if (template.profile.publicTypeIndex && template.profile.publicTypeIndex.value) {
+        fetchPublicTypeIndex()
       }
       render()
     }
-    async function fetchPublicTypeIndex(publicTypeIndex) {
+
+    async function fetchPublicTypeIndex() {
       const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');
       const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store);
       // Load the person's data into the store
-      await fetcher.load(publicTypeIndex);
+      await fetcher.load(template.profile.publicTypeIndex);
       // Display their details
-      const bookmarkTypeRegistration = store.any(null, SOLID("forClass"), BOOKMARK("Bookmark"))
-      console.log("bookmarkTypeRegistration", bookmarkTypeRegistration)
-      if (bookmarkTypeRegistration && bookmarkTypeRegistration.value) {
-        const bookmarkInstance = store.any(bookmarkTypeRegistration, SOLID("instance"));
-        template.bookmarkInstance = bookmarkInstance.value
-        fetchBookmarks(bookmarkInstance)
+      template.profile.bookmarkTypeRegistration = store.any(null, SOLID("forClass"), BOOKMARK("Bookmark"))
+      console.log("bookmarkTypeRegistration", template.profile.bookmarkTypeRegistration)
+      if (template.profile.bookmarkTypeRegistration && template.profile.bookmarkTypeRegistration.value) {
+        template.profile.bookmarkInstance = store.any(template.profile.bookmarkTypeRegistration, SOLID("instance"));
+        template.profile.bookmarkInstance = template.profile.bookmarkInstance.value
+        fetchBookmarks()
       }
+      render()
     }
-    async function fetchBookmarks(bookmarkInstance) {
+
+    async function fetchBookmarks() {
       const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');
       const SOLID = $rdf.Namespace('http://www.w3.org/ns/solid/terms#');
       const RDF = $rdf.Namespace('http://www.w3.org/1999/02/22-rdf-syntax-ns#');
@@ -365,8 +293,8 @@
       const store = $rdf.graph();
       const fetcher = new $rdf.Fetcher(store)
       // Load the person's data into the store
-      console.log("bookmarkInstance", bookmarkInstance)
-      await fetcher.load(bookmarkInstance);
+      console.log("bookmarkInstance", template.profile.bookmarkInstance)
+      await fetcher.load(template.profile.bookmarkInstance);
       // Display their details
       const bookmarks = store.statementsMatching(null, RDF("type"), BOOKMARK("Bookmark"));
       console.log("Bookmarks", bookmarks);
@@ -393,6 +321,102 @@
       }
       console.log()
     }
+
+    // HANDLERS
+    function handleLogin() {
+      // login event
+      solid.auth.trackSession(session => {
+        if (session && session.webId) {
+          state.user.webId = session.webId
+          state.loggedIn = true
+          fetchProfile()
+        }
+        render()
+      })
+    }
+
+    // Log the user in and out on click
+    function addListeners() {
+      let login = document.getElementById("login");
+      let logout = document.getElementById("logout");
+      let close = document.getElementById("close");
+      let cancel = document.getElementById("cancel");
+      let save = document.getElementById("save");
+      // login and logout buttons
+      const popupUri = "https://melvincarvalho.github.io/helloworld/popup.html";
+      login.addEventListener("click", () => solid.auth.popupLogin({
+        popupUri
+      }));
+      logout.addEventListener("click", () => {
+        state.loggedIn = false
+        solid.auth.logout()
+      });
+      handleLogin();
+
+      add.addEventListener("click", () => {
+        document.getElementById('modal').classList.add('is-active')
+      })
+      close.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+      })
+      cancel.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+      })
+      save.addEventListener("click", () => {
+        document.getElementById('modal').classList.remove('is-active')
+        let id = "#" + Math.random()
+        let uri = document.getElementById('uri').value
+        let title = document.getElementById('title').value
+        let source = template.bookmarkInstance
+        let date = new Date().toISOString();
+        const query = ` INSERT DATA {
+            <${id}> a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
+            <http://purl.org/dc/terms/title>   """${title}""" ;
+            <http://xmlns.com/foaf/0.1/maker>   <${template.webId}> ;
+            <http://purl.org/dc/terms/created>  "${date}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
+            <https://www.w3.org/2002/01/bookmark#recall> <${uri}> .
+          }`
+        // Send a PATCH request to update the source
+        console.log("query", query)
+        solid.auth.fetch(source, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/sparql-update' },
+          body: query,
+          credentials: 'include',
+        });
+      })
+
+    }
+
+
+    // HELPERS
+    function hamburgerHelper() {
+      document.querySelector(".navbar-burger").addEventListener("click", toggleNav);
+
+      function toggleNav() {
+        var nav = document.querySelector(".navbar-menu");
+        if (nav.className == "navbar-menu") {
+          nav.className = "navbar-menu is-active";
+        } else {
+          nav.className = "navbar-menu";
+        }
+      }
+    }
+
+    function getQueryStringParam(param) {
+      var url = window.location.toString();
+      url.match(/\?(.+)$/);
+      var params = RegExp.$1;
+      params = params.split("&");
+      var queryStringList = {};
+      for (var i = 0; i < params.length; i++) {
+        var tmp = params[i].split("=");
+        queryStringList[tmp[0]] = unescape(tmp[1]);
+      }
+      return queryStringList[param];
+    }
+
+
     // MAIN
     init()
 

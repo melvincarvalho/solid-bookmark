@@ -192,7 +192,7 @@
         bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<time datetime='bookmark.created'></time>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<time datetime='" + bookmark.created + "'></time>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }

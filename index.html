@@ -367,12 +367,12 @@
         let id = "#" + Math.random()
         let uri = document.getElementById('uri').value
         let title = document.getElementById('title').value
-        let source = template.bookmarkInstance
+        let source = template.profile.bookmarkInstance
         let date = new Date().toISOString();
         const query = ` INSERT DATA {
             <${id}> a <https://www.w3.org/2002/01/bookmark#Bookmark> ;
             <http://purl.org/dc/terms/title>   """${title}""" ;
-            <http://xmlns.com/foaf/0.1/maker>   <${template.webId}> ;
+            <http://xmlns.com/foaf/0.1/maker>   <${template.profile.webId}> ;
             <http://purl.org/dc/terms/created>  "${date}"^^<http://www.w3.org/2001/XMLSchema#dateTime> ;
             <https://www.w3.org/2002/01/bookmark#recall> <${uri}> .
           }`

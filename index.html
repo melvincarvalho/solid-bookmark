@@ -89,15 +89,13 @@
                   </div>
                   <div class="media-content">
                     <p id="name" class="title is-4"></p>
-                    <p class="subtitle is-6">@nick</p>
+                    <p class="subtitle is-6"></p>
                   </div>
                 </div>
 
                 <div class="content">
-                    <a id="user" target="_blank" href="#">
-                    <a></a>
+                    <a id="user" target="_blank" href="#"></a>
                   <br>
-                  <time datetime="2018-10-10">11:09 PM - 1 Jan 2016</time>
                 </div>
               </div>
             </div>
@@ -168,7 +166,7 @@
       login.style.display = "none"
       app.style.display = "";
       user.style.display = "";
-      user.textContent = webId;
+      user.textContent = "Profile";
       user.setAttribute("href", webId);
       fetchProfile(webId);
     }
@@ -184,6 +182,20 @@
       register.style.display = "";
     }
 
+    function render() {
+      renderProfile()
+      renderBookmarks()
+    }
+
+    function renderProfile() {
+      if (template.name) {
+        document.getElementById("name").textContent = template.name;
+      }
+      if (template.img) {
+        document.getElementById("img").setAttribute("src", template.img);
+      }
+    }
+
     function renderBookmarks() {
       let bookmarks = document.getElementById("bookmarks");
       bookmarks.innerHTML = ''
@@ -192,7 +204,7 @@
         bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<a target='_blank' href='" + bookmark.subject + "'>"+ bookmark.created +"</a>")
+        bookmarks.insertAdjacentHTML('beforeEnd', "<time><a target='_blank' href='" + bookmark.subject + "'>"+ bookmark.created +"</a></time>")
         bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
@@ -201,7 +213,8 @@
       // login event
       solid.auth.trackSession(session => {
         if (session && session.webId || template && template.webId) {
-          renderLogin(session.webId);
+          renderLogin(session.webId)
+          renderProfile()
         } else {
           renderLogout();
         }
@@ -299,14 +312,15 @@
       const publicTypeIndex = store.any($rdf.sym(webId), SOLID('publicTypeIndex'), null, $rdf.sym(webId.split('#')[0]));
       //console.log("publicTypeIndex", publicTypeIndex)
       if (name && name.value) {
-        document.getElementById("name").textContent = name.value;
+        template.name = name.value
       }
       if (img && img.value) {
-        document.getElementById("img").setAttribute("src", img.value);
+        template.img = img.value
       }
       if (publicTypeIndex && publicTypeIndex.value) {
         fetchPublicTypeIndex(publicTypeIndex)
       }
+      renderProfile()
     }
     async function fetchPublicTypeIndex(publicTypeIndex) {
       const BOOKMARK = $rdf.Namespace('https://www.w3.org/2002/01/bookmark#');

@@ -197,15 +197,20 @@
     }
 
     function renderBookmarks() {
-      let bookmarks = document.getElementById("bookmarks");
-      bookmarks.innerHTML = ''
-      for (var i = 0; i < template.bookmarks.length; i++) {
-        let bookmark = template.bookmarks[i]
-        bookmarks.insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<br>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<time><a target='_blank' href='" + bookmark.subject + "'>"+ bookmark.created +"</a></time>")
-        bookmarks.insertAdjacentHTML('beforeEnd', "<hr>")
+      let bookmarks = template.bookmarks.sort(function(a, b) {
+        createda = a.created;
+        createdb = b.created;
+        a = new Date(createda);
+        b = new Date(createdb);
+        return a>b ? -1 : a<b ? 1 : 0;
+      })
+      for (var i = 0; i < bookmarks.length; i++) {
+        let bookmark = bookmarks[i]
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<br>")
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<br>")
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<time><a target='_blank' href='" + bookmark.subject + "'>"+ bookmark.created +"</a></time>")
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
     // HANDLERS

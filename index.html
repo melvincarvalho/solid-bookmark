@@ -105,6 +105,8 @@
           <div class="column">
             <div id="bookmarks">
             </div>
+
+
           </div>
         </div>
 
@@ -233,10 +235,47 @@
       document.getElementById("bookmarks").innerHTML = ''
       for (var i = 0; i < bookmarks.length; i++) {
         let bookmark = bookmarks[i]
-        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<strong><a target='_blank' href='"+ bookmark.recall +"'>" + bookmark.title + "</a></strong>")
+        let documentEl = document.getElementById('bookmarks')
+
+        let bookmarkEl = `<article class="media">
+                      <figure class="media-left">
+                        <p class="image is-64x64">
+                          <img src="https://bulma.io/images/placeholders/128x128.png">
+                        </p>
+                      </figure>
+                      <div class="media-content">
+                        <div class="content">
+                          <p>
+                            <strong>${template.profile.name}</strong> <small>@johnsmith</small> <small><a target="_blank" href="${bookmark.subject}">${bookmark.created}</small>
+                            <br>
+                            <a target="_blank" href="${bookmark.recall}">${bookmark.title}</a>
+                          </p>
+                        </div>
+                        <nav class="level is-mobile">
+                          <div class="level-left">
+                            <a class="level-item">
+                              <span class="icon is-small"><i class="fas fa-reply"></i></span>
+                            </a>
+                            <a class="level-item">
+                              <span class="icon is-small"><i class="fas fa-retweet"></i></span>
+                            </a>
+                            <a class="level-item">
+                              <span class="icon is-small"><i class="fas fa-heart"></i></span>
+                            </a>
+                          </div>
+                        </nav>
+                      </div>
+                      <div class="media-right">
+                        <button class="delete"></button>
+                      </div>
+                    </article>`
+
+        document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', bookmarkEl)
+        /*
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<br>")
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<br>")
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<time><a target='_blank' href='" + bookmark.subject + "'>"+ bookmark.created +"</a></time>")
+        */
         document.getElementById("bookmarks").insertAdjacentHTML('beforeEnd', "<hr>")
       }
     }
